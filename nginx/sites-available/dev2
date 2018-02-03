@@ -1,0 +1,49 @@
+server {
+    listen      443;
+    server_name www.dev2.ampuero.me dev2.ampuero.me; 
+    server_name_in_redirect off;
+
+    # SSL configuration
+    
+ssl on;
+ssl_certificate /etc/ssl/cert_chain.crt;
+ssl_certificate_key /etc/ssl/ampuero.me.key;
+
+
+    root /var/www/html;
+
+    error_log /home/logs/debug.log debug;
+
+    index index.php index.html index.htm default.html default.htm;
+    # Support Clean (aka Search Engine Friendly) URLs
+    # deny running scripts inside writable directories
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+
+    location ~ \.php$ {
+        fastcgi_pass  unix:/var/run/php/php7.0-fpm.sock;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include /etc/nginx/fastcgi.conf;
+    }
+
+# deny running scripts inside writable directories
+    location ~* /(images|cache|media|logs|tmp)/.*\.(php|pl|py|jsp|asp|sh|cgi)$ {
+            return 403;
+            error_page 403 /403_error.html;
+    }
+
+
+    # caching of files 
+    location ~* \.(ico|pdf|flv)$ {
+            expires 1y;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|swf|xml|txt)$ {
+            expires 14d;
+    }
+}
+

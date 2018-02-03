@@ -1,0 +1,6 @@
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name ampuero.me www.ampuero.me;
+    return 301 https://$server_name$request_uri;
+}

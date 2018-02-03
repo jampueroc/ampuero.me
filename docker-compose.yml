@@ -1,0 +1,77 @@
+version: '3.1'
+
+services:
+  nginxv2:
+    restart: always
+    image: tobi312/rpi-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - VIRTUAL_HOST=ampuero.me
+      - NGINX_VERSION=1.12.*
+    volumes:
+      - /home/pi/docker/nginx/html:/var/www/html
+      - /home/pi/docker/nginx/sites-available:/etc/nginx/sites-enabled
+      - /etc/ssl:/etc/ssl
+      - /home/logs
+    networks:
+      - internalNet
+    external_links:
+      - joomla_web_1:192.168.1.150
+
+
+  animev2:
+    restart: always
+    build: ./anime/
+    ports:
+      - 8000:8000
+    expose:
+      - "8000"
+    networks:
+      internalNet: 
+        aliases:
+          - anime
+    env_file:
+      - .env  
+    volumes:
+      - /home/pi/docker/anime:/scrapper
+      - ./anime/visualizacion/staticfiles:/anime/visualizacion/staticfiles
+#    entrypoint: /anime/entrypoint.sh
+
+  drupalv2:
+    image: arm32v7/drupal:latest
+    ports:
+      - 8001:80
+    volumes:
+      - /var/www/html/modules
+      - /var/www/html/profiles
+      - /var/www/html/themes
+      # this takes advantage of the feature in Docker that a new anonymous
+      # volume (which is what we're creating here) will be initialized with the
+      # existing content of the image at the same location
+      - /var/www/html/sites
+    restart: always
+    networks:
+      internalNet: 
+        aliases:
+          - drupal
+
+  postgresv2:
+    restart: always
+    image: rotschopf/rpi-postgres:latest
+    volumes:
+      - /var/lib/postgresql
+      - ./postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    env_file:
+      - .env
+    expose:
+      - "5432"
+    networks:
+      internalNet: 
+        aliases:
+          - postgres
+
+networks:
+  internalNet: 
+#      driver: bridge
